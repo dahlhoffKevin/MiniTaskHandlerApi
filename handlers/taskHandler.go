@@ -42,7 +42,7 @@ func (h *TaskHandler) HandleTasks(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPatch:
 		id := r.PathValue("id")
 		if id == "" {
-			http.Error(w, "missing id", 400)
+			httpError.Write(w, httpError.New(http.StatusBadRequest, "id value cannot be null"))
 			return
 		}
 
@@ -52,11 +52,11 @@ func (h *TaskHandler) HandleTasks(w http.ResponseWriter, r *http.Request) {
 		case strings.HasSuffix(r.URL.Path, "/rename"):
 			h.handleTaskRenameTitle(w, r)
 		default:
-			http.Error(w, "endpoint method not found", 404)
+			httpError.Write(w, httpError.New(http.StatusNotFound, "endpoint method not found"))
 			return
 		}
 	default:
-		http.Error(w, "Methode nicht erlaubt", http.StatusMethodNotAllowed)
+		httpError.Write(w, httpError.New(http.StatusMethodNotAllowed, "method not allowed"))
 	}
 }
 
@@ -75,8 +75,6 @@ func (h *TaskHandler) getTaskFromRequest(r *http.Request) (*types.Task, *httpErr
 }
 
 func (h *TaskHandler) handleGetAllTasks(w http.ResponseWriter) {
-	utils.LogToConsole("handling /GET")
-
 	tasks, err := h.Store.GetAll()
 	if err != nil {
 		httpError.Write(w, err)
@@ -99,13 +97,12 @@ func (h *TaskHandler) handleGetOneTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) handleCreateTask(w http.ResponseWriter, r *http.Request) {
-	utils.LogToConsole("handling /POST")
 	var input struct {
-		Title string `json:"Title"`
+		Title string `json:"title"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Ungültige Anfrage", http.StatusNotFound)
+		httpError.Write(w, httpError.New(http.StatusBadRequest, "invalid request body"))
 		return
 	}
 
@@ -144,11 +141,11 @@ func (h *TaskHandler) handleTaskMarkAsDone(w http.ResponseWriter, r *http.Reques
 
 func (h *TaskHandler) handleTaskRenameTitle(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title string `json:"Title"`
+		Title string `json:"title"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Ungültige Anfrage", http.StatusBadRequest)
+		httpError.Write(w, httpError.New(http.StatusBadRequest, "invalid request body"))
 		return
 	}
 

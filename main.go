@@ -10,10 +10,6 @@ import (
 	"go-task-api/utils"
 )
 
-type TaskHandler struct {
-	Store types.TaskStore
-}
-
 func main() {
 	store := &types.InMemoryTaskStore{
 		Tasks:  []types.Task{},
@@ -26,10 +22,10 @@ func main() {
 	http.HandleFunc("/", handleHelloWorld)
 
 	// handle tasks
-	http.HandleFunc("/tasks", taskHandler.HandleTasks)
-	http.HandleFunc("/tasks/{id}", taskHandler.HandleTasks)
-	http.HandleFunc("/tasks/{id}/done", taskHandler.HandleTasks)
-	http.HandleFunc("/tasks/{id}/rename", taskHandler.HandleTasks)
+	http.HandleFunc("/tasks", utils.RouteLogging(taskHandler.HandleTasks))
+	http.HandleFunc("/tasks/{id}", utils.RouteLogging(taskHandler.HandleTasks))
+	http.HandleFunc("/tasks/{id}/done", utils.RouteLogging(taskHandler.HandleTasks))
+	http.HandleFunc("/tasks/{id}/rename", utils.RouteLogging(taskHandler.HandleTasks))
 
 	fmt.Println("Server läuft auf :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

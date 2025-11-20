@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"go-task-api/httpError"
 )
@@ -24,4 +25,12 @@ func ParseIDFromRequest(r *http.Request) (int, *httpError.HTTPError) {
 	}
 
 	return id, nil
+}
+
+func RouteLogging(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next(w, r)
+		fmt.Printf("[REQUEST] %v -> %v took: %vms\n", r.Method, r.URL.Path, time.Since(start).Milliseconds())
+	}
 }

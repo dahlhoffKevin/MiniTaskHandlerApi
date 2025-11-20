@@ -1,24 +1,31 @@
 package httpError
 
 import (
-	"errors"
+	"encoding/json"
 	"net/http"
 )
 
 type HTTPError struct {
-	Error error
-	Code  int
+	Code    int    `json:"-"`
+	Message string `json:"error"`
 }
 
-func Write(w http.ResponseWriter, err *HTTPError) {
-	http.Error(w, err.Error.Error(), err.Code)
+func (e *HTTPError) Error() string {
+	return e.Message
 }
 
 func New(code int, message string) *HTTPError {
 	return &HTTPError{
-		Error: errors.New(message),
-		Code:  code,
+		Code:    code,
+		Message: message,
 	}
+}
+
+func Write(w http.ResponseWriter, err *HTTPError) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(err.Code)
+
+	_ = json.NewEncoder(w).Encode(err)
 }
 
 func NotFound(message string) *HTTPError {
