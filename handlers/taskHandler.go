@@ -10,8 +10,6 @@ import (
 	"go-task-api/utils"
 )
 
-// var nextID = 1
-
 type TaskHandler struct {
 	Store types.TaskStore
 }
