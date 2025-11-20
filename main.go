@@ -6,12 +6,13 @@ import (
 	"net/http"
 
 	"go-task-api/handlers"
+	"go-task-api/storage"
 	"go-task-api/types"
 	"go-task-api/utils"
 )
 
 func main() {
-	store := &types.InMemoryTaskStore{
+	store := &storage.InMemoryTaskStore{
 		Tasks:  []types.Task{},
 		NextID: 1,
 	}
