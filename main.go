@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	// storage setup
 	store := &storage.InMemoryTaskStore{
 		Tasks:  []types.Task{},
 		NextID: 1,
@@ -19,22 +20,21 @@ func main() {
 
 	taskHandler := handlers.NewTaskHandler(store)
 
-	// register routes
-	http.HandleFunc("/", handleHelloWorld)
+	// routing setup
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", utils.RouteLogging(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
 
 	// handle tasks
-	http.HandleFunc("/tasks", utils.RouteLogging(taskHandler.HandleTasks))
-	http.HandleFunc("/tasks/{id}", utils.RouteLogging(taskHandler.HandleTasks))
-	http.HandleFunc("/tasks/{id}/done", utils.RouteLogging(taskHandler.HandleTasks))
-	http.HandleFunc("/tasks/{id}/rename", utils.RouteLogging(taskHandler.HandleTasks))
+	mux.HandleFunc("/tasks", utils.RouteLogging(taskHandler.HandleTasks))
+	mux.HandleFunc("/tasks/{id}", utils.RouteLogging(taskHandler.HandleTasks))
+	mux.HandleFunc("/tasks/{id}/done", utils.RouteLogging(taskHandler.HandleTasks))
+	mux.HandleFunc("/tasks/{id}/rename", utils.RouteLogging(taskHandler.HandleTasks))
 
 	fmt.Println("Server läuft auf :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func handleHelloWorld(w http.ResponseWriter, r *http.Request) {
-	utils.LogToConsole("hanling /")
-	w.WriteHeader(http.StatusOK)
 }
