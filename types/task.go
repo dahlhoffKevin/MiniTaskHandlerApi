@@ -1,8 +1,9 @@
 package types
 
 import (
-	"go-task-api/httpError"
 	"net/http"
+
+	"go-task-api/httpError"
 )
 
 type Task struct {

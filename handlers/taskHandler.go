@@ -31,8 +31,10 @@ func (h *TaskHandler) HandleTasks(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		if id != "" && r.URL.Path == "/tasks/"+id {
 			h.handleGetOneTask(w, r)
+			return
 		}
 
+		httpError.Write(w, httpError.New(http.StatusBadRequest, "endpoint not found"))
 	case http.MethodPost:
 		h.handleCreateTask(w, r)
 	case http.MethodDelete:
@@ -123,6 +125,7 @@ func (h *TaskHandler) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
 		httpError.Write(w, err)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 }
 

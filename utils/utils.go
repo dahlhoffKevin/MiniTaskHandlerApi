@@ -21,7 +21,7 @@ func ParseIDFromRequest(r *http.Request) (int, *httpError.HTTPError) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		return 0, httpError.New(http.StatusBadRequest, "task id must be a valid number")
+		return 0, httpError.New(http.StatusBadRequest, "id must be a valid number")
 	}
 
 	return id, nil

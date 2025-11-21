@@ -25,7 +25,7 @@ func (memoryTaskStore *InMemoryTaskStore) GetByID(id int) (*types.Task, *httpErr
 
 	task, err := types.GetTaskFromTaskID(id, memoryTaskStore.Tasks)
 	if err != nil {
-		return nil, httpError.New(404, "task not found")
+		return nil, err
 	}
 
 	return task, nil
@@ -50,7 +50,7 @@ func (memoryTaskStore *InMemoryTaskStore) Delete(id int) *httpError.HTTPError {
 
 	idx, err := types.GetTaskIndexFromTaskID(id, memoryTaskStore.Tasks)
 	if err != nil {
-		return httpError.New(404, "task not found")
+		return err
 	}
 
 	memoryTaskStore.Tasks = append(memoryTaskStore.Tasks[:idx], memoryTaskStore.Tasks[idx+1:]...)
