@@ -157,4 +157,7 @@ func (h *TaskHandler) handleTaskRenameTitle(w http.ResponseWriter, r *http.Reque
 	}
 
 	task.Rename(input.Title)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(task)
 }
