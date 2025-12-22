@@ -3,6 +3,8 @@ package storage
 import (
 	"go-task-api/httpError"
 	"go-task-api/types"
+
+	"github.com/google/uuid"
 )
 
 type InMemoryUserStore struct {
@@ -18,7 +20,7 @@ func (memoryUserStore *InMemoryUserStore) GetAll() ([]types.User, *httpError.HTT
 	return memoryUserStore.Users, nil
 }
 
-func (memoryUserStore *InMemoryUserStore) GetByID(id int) (*types.User, *httpError.HTTPError) {
+func (memoryUserStore *InMemoryUserStore) GetByID(id uuid.UUID) (*types.User, *httpError.HTTPError) {
 	if len(memoryUserStore.Users) == 0 {
 		return nil, httpError.New(404, "no users found")
 	}
@@ -37,7 +39,7 @@ func (memoryUserStore *InMemoryUserStore) Create(name string, email string) (typ
 	}
 
 	user := types.User{
-		ID:    memoryUserStore.NextID,
+		ID:    uuid.UUID{},
 		Name:  name,
 		Email: email,
 	}
@@ -47,7 +49,7 @@ func (memoryUserStore *InMemoryUserStore) Create(name string, email string) (typ
 	return user, nil
 }
 
-func (memoryUserStore *InMemoryUserStore) Delete(id int) *httpError.HTTPError {
+func (memoryUserStore *InMemoryUserStore) Delete(id uuid.UUID) *httpError.HTTPError {
 	if len(memoryUserStore.Users) == 0 {
 		return httpError.New(404, "no users found")
 	}

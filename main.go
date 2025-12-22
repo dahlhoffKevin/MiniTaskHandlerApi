@@ -1,11 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 
 	"go-task-api/handlers"
+	"go-task-api/postgresqlConnector"
 	"go-task-api/storage"
 	"go-task-api/types"
 	"go-task-api/utils"
@@ -18,8 +20,18 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	}))
 
+	db, err := postgresqlConnector.CreateInitialDatabaseConnection()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	mux.HandleFunc("/sqlTest", utils.RouteLogging(func(w http.ResponseWriter, r *http.Request) {
+		postgresqlConnector.TestConnection(db, w, r)
+	}))
+
 	setupTaskRestEndpoints(mux)
-	setupUserRestEndpoints(mux)
+	setupUserRestEndpoints(mux, db)
 
 	fmt.Println("Server läuft auf :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
@@ -27,12 +39,9 @@ func main() {
 	}
 }
 
-func setupUserRestEndpoints(mux *http.ServeMux) {
+func setupUserRestEndpoints(mux *http.ServeMux, db *sql.DB) {
 	// storage setup
-	store := &storage.InMemoryUserStore{
-		Users:  []types.User{},
-		NextID: 1,
-	}
+	store := storage.NewPostgresUserStore(db)
 
 	userHandler := handlers.NewUserStore(store)
 

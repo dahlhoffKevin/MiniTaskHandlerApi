@@ -9,13 +9,18 @@ import (
 
 	"go-task-api/handlers"
 	"go-task-api/types"
+
+	"github.com/google/uuid"
 )
 
 func TestUserHandler_GetAllUsers(t *testing.T) {
+	uuidForUserOne := uuid.New()
+	uuidForUserTwo := uuid.New()
+
 	store := &UserMockStore{
 		Users: []types.User{
-			{ID: 1, Name: "Alice", Email: "alice@example.com"},
-			{ID: 2, Name: "Bob", Email: "bob@example.com"},
+			{ID: uuidForUserOne, Name: "Alice", Email: "alice@example.com"},
+			{ID: uuidForUserTwo, Name: "Bob", Email: "bob@example.com"},
 		},
 	}
 
@@ -48,9 +53,11 @@ func TestUserHandler_GetAllUsers(t *testing.T) {
 }
 
 func TestUserHandler_GetOneUser(t *testing.T) {
+	uuidForUserOne := uuid.New()
+
 	store := &UserMockStore{
 		Users: []types.User{
-			{ID: 1, Name: "Alice", Email: "alice@example.com"},
+			{ID: uuidForUserOne, Name: "Alice", Email: "alice@example.com"},
 		},
 	}
 
@@ -59,7 +66,7 @@ func TestUserHandler_GetOneUser(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/users/{id}", handler.HandleUsers)
 
-	req := httptest.NewRequest(http.MethodGet, "/users/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/users/"+uuidForUserOne.String(), nil)
 	rr := httptest.NewRecorder()
 
 	// wichtig: über mux routen, NICHT direkt handler.HandleUsers
@@ -74,7 +81,7 @@ func TestUserHandler_GetOneUser(t *testing.T) {
 		t.Fatalf("failed to decode response json: %v", err)
 	}
 
-	if got.ID != 1 || got.Name != "Alice" {
+	if got.ID != uuidForUserOne || got.Name != "Alice" {
 		t.Fatalf("unexpected user: %+v", got)
 	}
 }
@@ -120,9 +127,11 @@ func TestUserHandler_CreateUser(t *testing.T) {
 }
 
 func TestUserHandler_DeleteUser(t *testing.T) {
+	uuidForUserOne := uuid.New()
+
 	store := &UserMockStore{
 		Users: []types.User{
-			{ID: 1, Name: "Alice", Email: "alice@example.com"},
+			{ID: uuidForUserOne, Name: "Alice", Email: "alice@example.com"},
 		},
 	}
 
@@ -131,7 +140,7 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/users/{id}", handler.HandleUsers)
 
-	req := httptest.NewRequest(http.MethodDelete, "/users/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/users/"+uuidForUserOne.String(), nil)
 	rr := httptest.NewRecorder()
 
 	mux.ServeHTTP(rr, req)
@@ -140,7 +149,7 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 		t.Fatalf("expected status 200, got %d", rr.Code)
 	}
 
-	if len(store.DeletedIDs) != 1 || store.DeletedIDs[0] != 1 {
+	if len(store.DeletedIDs) != 1 || store.DeletedIDs[0] != uuidForUserOne {
 		t.Fatalf("expected DeletedIDs to contain [1], got %v", store.DeletedIDs)
 	}
 }

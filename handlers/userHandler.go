@@ -44,9 +44,9 @@ func (h *UserHandler) HandleUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) getUserFromRequest(r *http.Request) (*types.User, *httpError.HTTPError) {
-	id, err := utils.ParseIDFromRequest(r)
-	if err != nil {
-		return nil, err
+	id, uuidParseError := utils.ParseUUIDFromRequest(r)
+	if uuidParseError != nil {
+		return nil, uuidParseError
 	}
 
 	user, errGetById := h.Store.GetByID(id)
@@ -102,15 +102,15 @@ func (h *UserHandler) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
-	id, errParseID := utils.ParseIDFromRequest(r)
-	if errParseID != nil {
-		httpError.Write(w, errParseID)
+	id, errParse := utils.ParseUUIDFromRequest(r)
+	if errParse != nil {
+		httpError.Write(w, errParse)
 		return
 	}
 
-	err := h.Store.Delete(id)
-	if err != nil {
-		httpError.Write(w, err)
+	errDel := h.Store.Delete(id)
+	if errDel != nil {
+		httpError.Write(w, errDel)
 		return
 	}
 }

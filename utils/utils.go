@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"go-task-api/httpError"
+
+	"github.com/google/uuid"
 )
 
 func LogToConsole(message string) {
@@ -22,6 +24,20 @@ func ParseIDFromRequest(r *http.Request) (int, *httpError.HTTPError) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return 0, httpError.New(http.StatusBadRequest, "id must be a valid number")
+	}
+
+	return id, nil
+}
+
+func ParseUUIDFromRequest(r *http.Request) (uuid.UUID, *httpError.HTTPError) {
+	idStr := r.PathValue("id")
+	if idStr == "" {
+		return uuid.UUID{}, httpError.New(http.StatusBadRequest, "id value cannot be null")
+	}
+
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return uuid.UUID{}, httpError.New(http.StatusBadRequest, "id is not a valid uuid")
 	}
 
 	return id, nil

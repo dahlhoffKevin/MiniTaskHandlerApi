@@ -7,6 +7,8 @@ import (
 	"go-task-api/handlers"
 	"go-task-api/httpError"
 	"go-task-api/types"
+
+	"github.com/google/uuid"
 )
 
 type TaskMockStore struct {
@@ -59,14 +61,14 @@ func SetupTestHeaderForTaskTests(store *TaskMockStore) {
 type UserMockStore struct {
 	Users      []types.User
 	Created    []types.User
-	DeletedIDs []int
+	DeletedIDs []uuid.UUID
 }
 
 func (s *UserMockStore) GetAll() ([]types.User, *httpError.HTTPError) {
 	return s.Users, nil
 }
 
-func (s *UserMockStore) GetByID(id int) (*types.User, *httpError.HTTPError) {
+func (s *UserMockStore) GetByID(id uuid.UUID) (*types.User, *httpError.HTTPError) {
 	for i := range s.Users {
 		if s.Users[i].ID == id {
 			return &s.Users[i], nil
@@ -77,7 +79,7 @@ func (s *UserMockStore) GetByID(id int) (*types.User, *httpError.HTTPError) {
 
 func (s *UserMockStore) Create(name string, email string) (types.User, *httpError.HTTPError) {
 	user := types.User{
-		ID:    len(s.Users) + 1,
+		ID:    uuid.New(),
 		Name:  name,
 		Email: email,
 	}
@@ -86,7 +88,7 @@ func (s *UserMockStore) Create(name string, email string) (types.User, *httpErro
 	return user, nil
 }
 
-func (s *UserMockStore) Delete(id int) *httpError.HTTPError {
+func (s *UserMockStore) Delete(id uuid.UUID) *httpError.HTTPError {
 	s.DeletedIDs = append(s.DeletedIDs, id)
 	return nil
 }
