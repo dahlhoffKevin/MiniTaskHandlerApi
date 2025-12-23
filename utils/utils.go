@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"go-task-api/httpError"
@@ -61,10 +62,51 @@ func ParseAndValidateUUID(id string) (uuid.UUID, *httpError.HTTPError) {
 	return parsedUUID, nil
 }
 
-func RouteLogging(next http.HandlerFunc) http.HandlerFunc {
+func checkBearerTokenIntegrity(bearerToken string) *httpError.HTTPError {
+	if bearerToken != "testtoken" {
+		return httpError.New(http.StatusUnauthorized, "could not validate bearer token")
+	}
+	return nil
+}
+
+func getBearerTokenFromRequestHeader(r *http.Request) (string, *httpError.HTTPError) {
+	reqToken := r.Header.Get("Authorization")
+	if reqToken == "" {
+		return "", httpError.New(http.StatusUnauthorized, "could not validate bearer token")
+	}
+
+	splitToken := strings.Split(reqToken, "Bearer ")
+	if len(splitToken) != 2 {
+		return "", httpError.New(http.StatusUnauthorized, "could not validate bearer token format")
+	}
+
+	return splitToken[1], nil
+}
+
+func AuthFunctionWrapper(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+		fmt.Printf("[REQUEST] %v -> %v ", r.Method, r.URL.Path)
+
+		bearerToken, err := getBearerTokenFromRequestHeader(r)
+		if err != nil {
+			httpError.Write(w, err)
+			return
+		}
+		if bearerToken == "" {
+			httpError.Write(w, httpError.New(http.StatusUnauthorized, "could not validate bearer token"))
+			return
+		}
+
+		//authenticate
+		errAuth := checkBearerTokenIntegrity(bearerToken)
+		if errAuth != nil {
+			httpError.Write(w, errAuth)
+			fmt.Print("[unauthorized: " + errAuth.Error() + "]\n")
+			return
+		}
+
 		next(w, r)
-		fmt.Printf("[REQUEST] %v -> %v took: %vms\n", r.Method, r.URL.Path, time.Since(start).Milliseconds())
+		fmt.Printf("took: %vms [authenticated]\n", time.Since(start).Milliseconds())
 	}
 }

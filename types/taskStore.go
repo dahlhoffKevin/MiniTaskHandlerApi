@@ -11,4 +11,5 @@ type TaskStore interface {
 	GetByID(id uuid.UUID) (*Task, *httpError.HTTPError)
 	Create(title string, userid uuid.UUID) (Task, *httpError.HTTPError)
 	Delete(id uuid.UUID) *httpError.HTTPError
+	Update(task Task) *httpError.HTTPError
 }

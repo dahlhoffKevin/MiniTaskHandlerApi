@@ -48,7 +48,7 @@ func (h *TaskHandler) HandleTasks(w http.ResponseWriter, r *http.Request) {
 
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/done"):
-			h.handleTaskMarkAsDone(w, r)
+			h.handleMarkTaskAsDone(w, r)
 		case strings.HasSuffix(r.URL.Path, "/rename"):
 			h.handleTaskRenameTitle(w, r)
 		default:
@@ -109,7 +109,7 @@ func (h *TaskHandler) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 
 	userid, err := utils.ParseAndValidateUUID(input.UserID)
 	if err != nil {
-		httpError.Write(w, err)
+		httpError.Write(w, httpError.New(err.Code, "faild to parse userid: "+err.Error()))
 		return
 	}
 
@@ -140,7 +140,7 @@ func (h *TaskHandler) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *TaskHandler) handleTaskMarkAsDone(w http.ResponseWriter, r *http.Request) {
+func (h *TaskHandler) handleMarkTaskAsDone(w http.ResponseWriter, r *http.Request) {
 	task, err := h.getTaskFromRequest(r)
 	if err != nil {
 		httpError.Write(w, err)
@@ -148,6 +148,13 @@ func (h *TaskHandler) handleTaskMarkAsDone(w http.ResponseWriter, r *http.Reques
 	}
 
 	task.MarkDone()
+
+	errUpdate := h.Store.Update(*task)
+	if errUpdate != nil {
+		httpError.Write(w, err)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 

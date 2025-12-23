@@ -62,12 +62,21 @@ func (s *PostgresqlTaskStore) GetByID(id uuid.UUID) (*types.Task, *httpError.HTT
 
 func (s *PostgresqlTaskStore) Create(title string, userid uuid.UUID) (types.Task, *httpError.HTTPError) {
 	var t types.Task
+	var u types.User
+
+	//check if user exists
+	userCheckError := s.db.QueryRow(`SELECT id, name, email FROM users WHERE id = $1`, userid).
+		Scan(&u.ID, &u.Name, &u.Email)
+
+	if userCheckError == sql.ErrNoRows || u.ID != userid {
+		return types.Task{}, httpError.New(http.StatusNotFound, "user does not exist")
+	}
 
 	err := s.db.QueryRow(`INSERT INTO tasks (title, done, userid) VALUES ($1, $2, $3) RETURNING id, title, done, userid`, title, false, userid).
 		Scan(&t.ID, &t.Title, &t.Done, &t.UserID)
 
 	if err != nil {
-		return types.Task{}, httpError.New(http.StatusInternalServerError, "failed ti create new task: "+err.Error())
+		return types.Task{}, httpError.New(http.StatusInternalServerError, "failed to create new task: "+err.Error())
 	}
 
 	return t, nil
@@ -85,6 +94,27 @@ func (s *PostgresqlTaskStore) Delete(id uuid.UUID) *httpError.HTTPError {
 	}
 	if affected == 0 {
 		return httpError.New(http.StatusNotFound, "task not found")
+	}
+
+	return nil
+}
+
+func (s *PostgresqlTaskStore) Update(task types.Task) *httpError.HTTPError {
+	var t types.Task
+
+	err := s.db.QueryRow(
+		`UPDATE tasks 
+		 SET title = $1, done = $2, userid = $3 
+		 WHERE id = $4 
+		 RETURNING id, title, done, userid`,
+		task.Title, task.Done, task.UserID, task.ID,
+	).Scan(&t.ID, &t.Title, &t.Done, &t.UserID)
+
+	if err == sql.ErrNoRows {
+		return httpError.New(http.StatusNotFound, "task not found")
+	}
+	if err != nil {
+		return httpError.New(http.StatusInternalServerError, "failed to update task: "+err.Error())
 	}
 
 	return nil

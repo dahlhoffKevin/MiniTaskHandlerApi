@@ -15,7 +15,7 @@ import (
 func main() {
 	// routing setup
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", utils.RouteLogging(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", utils.AuthFunctionWrapper(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -25,7 +25,7 @@ func main() {
 	}
 	defer db.Close()
 
-	mux.HandleFunc("/sqlTest", utils.RouteLogging(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/sqlTest", utils.AuthFunctionWrapper(func(w http.ResponseWriter, r *http.Request) {
 		postgresqlConnector.TestConnection(db, w, r)
 	}))
 
@@ -45,8 +45,8 @@ func setupUserRestEndpoints(mux *http.ServeMux, db *sql.DB) {
 	userHandler := handlers.NewUserStore(store)
 
 	// handle users
-	mux.HandleFunc("/users", utils.RouteLogging(userHandler.HandleUsers))
-	mux.HandleFunc("/users/{id}", utils.RouteLogging(userHandler.HandleUsers))
+	mux.HandleFunc("/users", utils.AuthFunctionWrapper(userHandler.HandleUsers))
+	mux.HandleFunc("/users/{id}", utils.AuthFunctionWrapper(userHandler.HandleUsers))
 }
 
 func setupTaskRestEndpoints(mux *http.ServeMux, db *sql.DB) {
@@ -56,8 +56,8 @@ func setupTaskRestEndpoints(mux *http.ServeMux, db *sql.DB) {
 	taskHandler := handlers.NewTaskHandler(store)
 
 	// handle tasks
-	mux.HandleFunc("/tasks", utils.RouteLogging(taskHandler.HandleTasks))
-	mux.HandleFunc("/tasks/{id}", utils.RouteLogging(taskHandler.HandleTasks))
-	mux.HandleFunc("/tasks/{id}/done", utils.RouteLogging(taskHandler.HandleTasks))
-	mux.HandleFunc("/tasks/{id}/rename", utils.RouteLogging(taskHandler.HandleTasks))
+	mux.HandleFunc("/tasks", utils.AuthFunctionWrapper(taskHandler.HandleTasks))
+	mux.HandleFunc("/tasks/{id}", utils.AuthFunctionWrapper(taskHandler.HandleTasks))
+	mux.HandleFunc("/tasks/{id}/done", utils.AuthFunctionWrapper(taskHandler.HandleTasks))
+	mux.HandleFunc("/tasks/{id}/rename", utils.AuthFunctionWrapper(taskHandler.HandleTasks))
 }
