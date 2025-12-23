@@ -43,6 +43,24 @@ func ParseUUIDFromRequest(r *http.Request) (uuid.UUID, *httpError.HTTPError) {
 	return id, nil
 }
 
+func ParseAndValidateUUID(id string) (uuid.UUID, *httpError.HTTPError) {
+	if id == "" {
+		return uuid.UUID{}, httpError.New(http.StatusBadRequest, "id value cannot be null")
+	}
+
+	errValidate := uuid.Validate(id)
+	if errValidate != nil {
+		return uuid.UUID{}, httpError.New(http.StatusBadRequest, "id ist not a valid uuid: "+errValidate.Error())
+	}
+
+	parsedUUID, errParse := uuid.Parse(id)
+	if errParse != nil {
+		return uuid.UUID{}, httpError.New(http.StatusInternalServerError, "failed to parse id to uuid: "+errParse.Error())
+	}
+
+	return parsedUUID, nil
+}
+
 func RouteLogging(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

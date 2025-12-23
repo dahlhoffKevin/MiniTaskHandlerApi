@@ -61,7 +61,7 @@ func (h *TaskHandler) HandleTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) getTaskFromRequest(r *http.Request) (*types.Task, *httpError.HTTPError) {
-	id, err := utils.ParseIDFromRequest(r)
+	id, err := utils.ParseUUIDFromRequest(r)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,8 @@ func (h *TaskHandler) handleGetOneTask(w http.ResponseWriter, r *http.Request) {
 
 func (h *TaskHandler) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title string `json:"title"`
+		Title  string `json:"title"`
+		UserID string `json:"userid"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -106,7 +107,17 @@ func (h *TaskHandler) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task := h.Store.Create(input.Title)
+	userid, err := utils.ParseAndValidateUUID(input.UserID)
+	if err != nil {
+		httpError.Write(w, err)
+		return
+	}
+
+	task, errCreate := h.Store.Create(input.Title, userid)
+	if errCreate != nil {
+		httpError.Write(w, errCreate)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -114,15 +125,15 @@ func (h *TaskHandler) handleCreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) handleDeleteTask(w http.ResponseWriter, r *http.Request) {
-	id, errParseID := utils.ParseIDFromRequest(r)
-	if errParseID != nil {
-		httpError.Write(w, errParseID)
+	id, err := utils.ParseUUIDFromRequest(r)
+	if err != nil {
+		httpError.Write(w, err)
 		return
 	}
 
-	err := h.Store.Delete(id)
-	if err != nil {
-		httpError.Write(w, err)
+	errDel := h.Store.Delete(id)
+	if errDel != nil {
+		httpError.Write(w, errDel)
 		return
 	}
 

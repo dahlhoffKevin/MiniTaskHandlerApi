@@ -9,7 +9,6 @@ import (
 	"go-task-api/handlers"
 	"go-task-api/postgresqlConnector"
 	"go-task-api/storage"
-	"go-task-api/types"
 	"go-task-api/utils"
 )
 
@@ -30,7 +29,7 @@ func main() {
 		postgresqlConnector.TestConnection(db, w, r)
 	}))
 
-	setupTaskRestEndpoints(mux)
+	setupTaskRestEndpoints(mux, db)
 	setupUserRestEndpoints(mux, db)
 
 	fmt.Println("Server läuft auf :8080")
@@ -50,12 +49,9 @@ func setupUserRestEndpoints(mux *http.ServeMux, db *sql.DB) {
 	mux.HandleFunc("/users/{id}", utils.RouteLogging(userHandler.HandleUsers))
 }
 
-func setupTaskRestEndpoints(mux *http.ServeMux) {
+func setupTaskRestEndpoints(mux *http.ServeMux, db *sql.DB) {
 	// storage setup
-	store := &storage.InMemoryTaskStore{
-		Tasks:  []types.Task{},
-		NextID: 1,
-	}
+	store := storage.NewPostgresTaskStore(db)
 
 	taskHandler := handlers.NewTaskHandler(store)
 

@@ -3,6 +3,8 @@ package storage
 import (
 	"go-task-api/httpError"
 	"go-task-api/types"
+
+	"github.com/google/uuid"
 )
 
 type InMemoryTaskStore struct {
@@ -18,7 +20,7 @@ func (memoryTaskStore *InMemoryTaskStore) GetAll() ([]types.Task, *httpError.HTT
 	return memoryTaskStore.Tasks, nil
 }
 
-func (memoryTaskStore *InMemoryTaskStore) GetByID(id int) (*types.Task, *httpError.HTTPError) {
+func (memoryTaskStore *InMemoryTaskStore) GetByID(id uuid.UUID) (*types.Task, *httpError.HTTPError) {
 	if len(memoryTaskStore.Tasks) == 0 {
 		return nil, httpError.New(404, "no tasks found")
 	}
@@ -33,7 +35,7 @@ func (memoryTaskStore *InMemoryTaskStore) GetByID(id int) (*types.Task, *httpErr
 
 func (memoryTaskStore *InMemoryTaskStore) Create(title string) types.Task {
 	task := types.Task{
-		ID:    memoryTaskStore.NextID,
+		ID:    uuid.New(),
 		Title: title,
 		Done:  false,
 	}
@@ -43,7 +45,7 @@ func (memoryTaskStore *InMemoryTaskStore) Create(title string) types.Task {
 	return task
 }
 
-func (memoryTaskStore *InMemoryTaskStore) Delete(id int) *httpError.HTTPError {
+func (memoryTaskStore *InMemoryTaskStore) Delete(id uuid.UUID) *httpError.HTTPError {
 	if len(memoryTaskStore.Tasks) == 0 {
 		return httpError.New(404, "no tasks found")
 	}

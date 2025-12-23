@@ -14,14 +14,14 @@ import (
 type TaskMockStore struct {
 	Tasks      []types.Task
 	Created    []types.Task
-	DeletedIDs []int
+	DeletedIDs []uuid.UUID
 }
 
 func (s *TaskMockStore) GetAll() ([]types.Task, *httpError.HTTPError) {
 	return s.Tasks, nil
 }
 
-func (s *TaskMockStore) GetByID(id int) (*types.Task, *httpError.HTTPError) {
+func (s *TaskMockStore) GetByID(id uuid.UUID) (*types.Task, *httpError.HTTPError) {
 	for i := range s.Tasks {
 		if s.Tasks[i].ID == id {
 			return &s.Tasks[i], nil
@@ -30,18 +30,19 @@ func (s *TaskMockStore) GetByID(id int) (*types.Task, *httpError.HTTPError) {
 	return nil, httpError.New(http.StatusNotFound, "user not found")
 }
 
-func (s *TaskMockStore) Create(title string) types.Task {
+func (s *TaskMockStore) Create(title string, userid uuid.UUID) (types.Task, *httpError.HTTPError) {
 	task := types.Task{
-		ID:    len(s.Tasks) + 1,
-		Title: title,
-		Done:  false,
+		ID:     uuid.New(),
+		Title:  title,
+		Done:   false,
+		UserID: userid,
 	}
 	s.Tasks = append(s.Tasks, task)
 	s.Created = append(s.Created, task)
-	return task
+	return task, nil
 }
 
-func (s *TaskMockStore) Delete(id int) *httpError.HTTPError {
+func (s *TaskMockStore) Delete(id uuid.UUID) *httpError.HTTPError {
 	s.DeletedIDs = append(s.DeletedIDs, id)
 	return nil
 }

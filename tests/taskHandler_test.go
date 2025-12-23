@@ -9,13 +9,18 @@ import (
 
 	"go-task-api/handlers"
 	"go-task-api/types"
+
+	"github.com/google/uuid"
 )
 
 func TestTaskHandler_GetAllTasks(t *testing.T) {
+	uuidForUserOne := uuid.New()
+	uuidForUserTwo := uuid.New()
+
 	store := &TaskMockStore{
 		Tasks: []types.Task{
-			{ID: 1, Title: "test1", Done: false},
-			{ID: 2, Title: "test2", Done: false},
+			{ID: uuidForUserOne, Title: "test1", Done: false},
+			{ID: uuidForUserTwo, Title: "test2", Done: false},
 		},
 	}
 
@@ -48,9 +53,11 @@ func TestTaskHandler_GetAllTasks(t *testing.T) {
 }
 
 func TestTaskHandler_GetOneTask(t *testing.T) {
+	uuidForUserOne := uuid.New()
+
 	store := &TaskMockStore{
 		Tasks: []types.Task{
-			{ID: 1, Title: "test1", Done: false},
+			{ID: uuidForUserOne, Title: "test1", Done: false},
 		},
 	}
 
@@ -59,7 +66,7 @@ func TestTaskHandler_GetOneTask(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/tasks/{id}", handler.HandleTasks)
 
-	req := httptest.NewRequest(http.MethodGet, "/tasks/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/tasks/"+uuidForUserOne.String(), nil)
 	rr := httptest.NewRecorder()
 
 	mux.ServeHTTP(rr, req)
@@ -73,7 +80,7 @@ func TestTaskHandler_GetOneTask(t *testing.T) {
 		t.Fatalf("failed to decode response json: %v", err)
 	}
 
-	if got.ID != 1 || got.Title != "test1" {
+	if got.ID != uuidForUserOne || got.Title != "test1" {
 		t.Fatalf("unexpected task: %+v", got)
 	}
 }
@@ -82,8 +89,11 @@ func TestTaskHandler_CreateTask(t *testing.T) {
 	store := &TaskMockStore{}
 	handler := &handlers.TaskHandler{Store: store}
 
+	uuidForUserOne := uuid.New()
+
 	body := map[string]string{
-		"title": "test1",
+		"title":  "test1",
+		"userid": uuidForUserOne.String(),
 	}
 	jsonBody, _ := json.Marshal(body)
 
@@ -118,9 +128,11 @@ func TestTaskHandler_CreateTask(t *testing.T) {
 }
 
 func TestTaskHandler_DeleteTask(t *testing.T) {
+	uuidForUserOne := uuid.New()
+
 	store := &TaskMockStore{
 		Tasks: []types.Task{
-			{ID: 1, Title: "test1", Done: false},
+			{ID: uuidForUserOne, Title: "test1", Done: false},
 		},
 	}
 
@@ -129,7 +141,7 @@ func TestTaskHandler_DeleteTask(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/tasks/{id}", handler.HandleTasks)
 
-	req := httptest.NewRequest(http.MethodDelete, "/tasks/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/tasks/"+uuidForUserOne.String(), nil)
 	rr := httptest.NewRecorder()
 
 	mux.ServeHTTP(rr, req)
@@ -138,15 +150,17 @@ func TestTaskHandler_DeleteTask(t *testing.T) {
 		t.Fatalf("expected status 200, got %d", rr.Code)
 	}
 
-	if len(store.DeletedIDs) != 1 || store.DeletedIDs[0] != 1 {
+	if len(store.DeletedIDs) != 1 || store.DeletedIDs[0] != uuidForUserOne {
 		t.Fatalf("expected DeletedIDs tp contain [1], got %v", store.DeletedIDs)
 	}
 }
 
 func TestTaskHandler_MarkTaskAsDone(t *testing.T) {
+	uuidForUserOne := uuid.New()
+
 	store := &TaskMockStore{
 		Tasks: []types.Task{
-			{ID: 1, Title: "test1", Done: false},
+			{ID: uuidForUserOne, Title: "test1", Done: false},
 		},
 	}
 
@@ -155,7 +169,7 @@ func TestTaskHandler_MarkTaskAsDone(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/tasks/{id}/done", handler.HandleTasks)
 
-	req := httptest.NewRequest(http.MethodPatch, "/tasks/1/done", nil)
+	req := httptest.NewRequest(http.MethodPatch, "/tasks/"+uuidForUserOne.String()+"/done", nil)
 	rr := httptest.NewRecorder()
 
 	mux.ServeHTTP(rr, req)
@@ -170,9 +184,11 @@ func TestTaskHandler_MarkTaskAsDone(t *testing.T) {
 }
 
 func TestTaskHandler_RenameTask(t *testing.T) {
+	uuidForUserOne := uuid.New()
+
 	store := &TaskMockStore{
 		Tasks: []types.Task{
-			{ID: 1, Title: "task1", Done: false},
+			{ID: uuidForUserOne, Title: "task1", Done: false},
 		},
 	}
 
@@ -186,7 +202,7 @@ func TestTaskHandler_RenameTask(t *testing.T) {
 	}
 	jsonBody, _ := json.Marshal(body)
 
-	req := httptest.NewRequest(http.MethodPatch, "/tasks/1/rename", bytes.NewReader(jsonBody))
+	req := httptest.NewRequest(http.MethodPatch, "/tasks/"+uuidForUserOne.String()+"/rename", bytes.NewReader(jsonBody))
 	rr := httptest.NewRecorder()
 
 	mux.ServeHTTP(rr, req)

@@ -28,12 +28,12 @@ func (s *PostgresqlUserStore) GetAll() ([]types.User, *httpError.HTTPError) {
 	for rows.Next() {
 		var u types.User
 		if err := rows.Scan(&u.ID, &u.Name, &u.Email); err != nil {
-			return nil, httpError.New(http.StatusInternalServerError, "faild to scan user: "+err.Error())
+			return nil, httpError.New(http.StatusInternalServerError, "failed to scan user: "+err.Error())
 		}
 		users = append(users, u)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, httpError.New(http.StatusInternalServerError, "row iteration failed"+err.Error())
+		return nil, httpError.New(http.StatusInternalServerError, "row iteration failed: "+err.Error())
 	}
 
 	if len(users) == 0 {
